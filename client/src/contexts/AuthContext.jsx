@@ -19,7 +19,7 @@ export const AuthProvider = ({ children }) => {
     return saved ? JSON.parse(saved) : true;
   });
 
-  const API_BASE_URL = 'http://localhost:5000';
+  const API_BASE_URL = 'https://medtrack-i6zm.onrender.com';
 
   useEffect(() => {
     const token = localStorage.getItem('token');
