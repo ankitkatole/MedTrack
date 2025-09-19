@@ -17,7 +17,7 @@ const app = express();
 app.use(express.json());
 app.use(express.json({ limit: '2mb' }));              
 app.use(express.urlencoded({ extended: true }));     
-app.use(cors({ origin: FRONTEND_URL || 'http://localhost:5173' })); 
+app.use(cors({ origin: FRONTEND_URL || 'https://med-track-kohl.vercel.app/' })); 
 
 
 app.use((req, res, next) => {
