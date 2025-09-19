@@ -17,7 +17,27 @@ const app = express();
 app.use(express.json());
 app.use(express.json({ limit: '2mb' }));              
 app.use(express.urlencoded({ extended: true }));     
-app.use(cors({ origin: FRONTEND_URL || 'https://med-track-kohl.vercel.app/' })); 
+// app.use(cors({ origin: FRONTEND_URL || 'https://med-track-kohl.vercel.app/' })); 
+// server.js
+const allowedOrigins = [
+  'https://med-track-kohl.vercel.app',   // production FE
+  'http://localhost:5173',               // local FE
+];
+
+app.use(cors({
+  origin: function (origin, callback) {
+    // Allow non-browser requests (no Origin) and allowed origins
+    if (!origin || allowedOrigins.includes(origin)) return callback(null, true);
+    return callback(new Error('Not allowed by CORS'));
+  }, // dynamic allowlist [web:411]
+  credentials: true, // if cookies/credentials are used; safe with explicit origins [web:222]
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'], // preflight methods [web:213]
+  allowedHeaders: ['Content-Type', 'Authorization', 'Accept'],   // preflight headers [web:222]
+  optionsSuccessStatus: 200,
+}));
+
+// Optional: handle preflight explicitly (cors() already does this)
+app.options('*', cors()); // ensure preflight answers with matching ACAO [web:213]
 
 
 app.use((req, res, next) => {
