@@ -36,8 +36,8 @@ app.use(cors({
   optionsSuccessStatus: 200,
 }));
 
-// Optional: handle preflight explicitly (cors() already does this)
-app.options('*', cors()); // ensure preflight answers with matching ACAO [web:213]
+// // Optional: handle preflight explicitly (cors() already does this)
+// app.options('*', cors()); // ensure preflight answers with matching ACAO [web:213]
 
 
 app.use((req, res, next) => {
