@@ -3,7 +3,7 @@ const jwt = require('jsonwebtoken');
 const bcrypt = require('bcrypt');
 const User = require('../model/User');
 
-const {JWT_SECRET} = require('../../constant') || 'change_me';
+const {JWT_SECRET} = require('../../constant');
 const JWT_EXPIRES_IN = '30d'; // 30 days
 
 const signToken = (user) =>
@@ -16,8 +16,10 @@ const signToken = (user) =>
 // POST /auth/signup
 exports.signup = async (req, res) => {
   try {
+    console.log('📝 Signup request received:', req.body);
     const { name, phone, email, aadhaar, password, role } = req.body;
     if (!name || !phone || !email || !aadhaar || !password) {
+      console.log('❌ Missing required fields');
       return res.status(400).json({ message: 'Missing required fields' });
     } 
     const user = new User({ name, phone, email, aadhaar, password, role }); 
@@ -26,8 +28,9 @@ exports.signup = async (req, res) => {
     user.password = await bcrypt.hash(password, salt);
 
     await user.save(); 
+    console.log('✅ User created successfully:', user.medTrackId);
 
-    const token = signToken(user); // [web:74]
+    const token = signToken(user);
 
     return res.status(201).json({
       message: 'Signup successful',
@@ -43,10 +46,12 @@ exports.signup = async (req, res) => {
       },
     }); 
   } catch (err) {
+    console.error('❌ Signup error:', err);
     if (err.code === 11000) {
       const field = Object.keys(err.keyPattern || err.keyValue || {})[0] || 'field';
       return res.status(409).json({ message: `Duplicate ${field}` });
-    } // [web:60]
+    }
+    console.log(err)
     return res.status(500).json({ message: 'Server error' });
   }
 };
@@ -55,24 +60,29 @@ exports.signup = async (req, res) => {
 // identifier can be email or phone
 exports.login = async (req, res) => {
   try {
+    console.log('🔐 Login request received for:', req.body.identifier);
     const { identifier, password } = req.body;
     if (!identifier || !password) {
+      console.log('❌ Missing credentials');
       return res.status(400).json({ message: 'Missing credentials' });
-    } // [web:78]
+    }
 
     const query = identifier.includes('@') ? { email: identifier } : { phone: identifier };
-    const user = await User.findOne(query).select('+password'); // password is select:false in schema [web:33]
+    const user = await User.findOne(query).select('+password');
 
     if (!user) {
+      console.log('❌ User not found');
       return res.status(400).json({ message: 'Invalid credentials' });
-    } // [web:66]
+    }
 
-    const ok = await bcrypt.compare(password, user.password); // constant-time compare [web:73][web:40]
+    const ok = await bcrypt.compare(password, user.password);
     if (!ok) {
+      console.log('❌ Invalid password');
       return res.status(400).json({ message: 'Invalid credentials' });
-    } // [web:66]
+    }
 
-    const token = signToken(user); // [web:74]
+    const token = signToken(user);
+    console.log('✅ Login successful for:', user.medTrackId);
 
     return res.json({
       message: 'Login successful',
@@ -86,8 +96,9 @@ exports.login = async (req, res) => {
         medTrackId: user.medTrackId,
         createdAt: user.createdAt,
       },
-    }); // [web:66]
+    });
   } catch (err) {
+    console.error('❌ Login error:', err);
     return res.status(500).json({ message: 'Server error' });
   }
 };
