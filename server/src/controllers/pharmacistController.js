@@ -17,22 +17,25 @@ function requirePharmacist(req, res) {
 // controllers/pharmacistController.js
 exports.getPrescriptionsByPatientMedTrackId = async (req, res) => {
   try {
-    if (!requirePharmacist(req, res)) return;
+    if (!requirePharmacist(req, res)) return; // RBAC [web:235]
 
     const { medTrackId } = req.params;
 
-    // Fetch patient with minimal safe fields
     const patient = await User.findOne({ medTrackId })
       .select('name email phone role medTrackId createdAt'); // safe subset [web:180]
-
     if (!patient) {
       return res.status(404).json({ message: 'Patient not found' });
-    }
+    } // 404 for missing patient [web:235]
 
-    // Fetch prescriptions and populate doctor only
+    // Explicitly include medicine arrays in case of select:false in schema
     const prescriptions = await Prescription.find({ user: patient._id })
       .sort({ createdAt: -1 })
-      .populate('doctor', 'name email role medTrackId'); // [web:180]
+      .select(
+        'diagnosis visitReason notes issueDate dispenseDate ' +
+        'medicineNames medicineDosages medicineFrequencies medicineRoutes ' +
+        'medicineDurationDays medicineInstructions doctor user createdAt updatedAt'
+      ) // include medicines [web:180]
+      .populate('doctor', 'name email role medTrackId'); // for card display [web:180]
 
     return res.json({ patient, prescriptions, count: prescriptions.length });
   } catch (err) {
@@ -40,20 +43,28 @@ exports.getPrescriptionsByPatientMedTrackId = async (req, res) => {
   }
 };
 
-// GET /pharmacist/prescriptions/:id
+// GET /pharmacy/prescriptions/:id
 exports.getPrescriptionByIdAsPharmacist = async (req, res) => {
   try {
-    if (!requirePharmacist(req, res)) return;
+    if (!requirePharmacist(req, res)) return; // RBAC [web:235]
 
     const { id } = req.params;
+    if (!mongoose.isValidObjectId(id)) {
+      return res.status(400).json({ message: 'Invalid prescription id' });
+    } // guard bad ids [web:206]
 
-    const doc = await Prescription
-      .findById(id)
-      .populate('doctor', 'name email role medTrackId'); // safe subset [web:180]
+    const doc = await Prescription.findById(id)
+      .select(
+        'diagnosis visitReason notes issueDate dispenseDate ' +
+        'medicineNames medicineDosages medicineFrequencies medicineRoutes ' +
+        'medicineDurationDays medicineInstructions doctor user'
+      ) // full fields for modal [web:180]
+      .populate('doctor', 'name email role medTrackId')
+      .populate('user', 'name email phone role medTrackId'); // show patient too [web:180]
 
     if (!doc) {
       return res.status(404).json({ message: 'Prescription not found' });
-    } // [web:179]
+    } // not found [web:235]
 
     return res.json(doc);
   } catch (err) {
@@ -61,9 +72,8 @@ exports.getPrescriptionByIdAsPharmacist = async (req, res) => {
   }
 };
 
-// controllers/pharmacistController.js
-// controllers/pharmacistController.js
-// controllers/pharmacistController.js
+
+
 exports.dispensePrescription = async (req, res) => {
   try {
     if (!requirePharmacist(req, res)) return;
