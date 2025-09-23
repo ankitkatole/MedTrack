@@ -4,6 +4,7 @@ import ProfileCard from '../components/Patient/ProfileCard';
 import DispensedMedicines from '../components/Pharmacist/DispensedMedicines';
 import PatientSearch from '../components/Pharmacist/PatientSearch';
 import HealthAnalytics from '../components/Patient/HealthAnalytics';
+import DispensedPrescriptionDetail from '../components/Pharmacist/DispensedPrescriptionDetail';
 
 const PharmacistDashboard = () => {
   const [activeTab, setActiveTab] = useState('profile');
@@ -15,23 +16,23 @@ const PharmacistDashboard = () => {
         return <ProfileCard />;
       case 'dispensed':
         if (selectedPrescription) {
-          // You can create a PharmacistPrescriptionDetail component
-          return (
-            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
-              <button
-                onClick={() => setSelectedPrescription(null)}
-                className="mb-4 text-blue-600 dark:text-blue-400 hover:underline"
-              >
-                ← Back to Dispensed Medicines
-              </button>
-              <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
-                Prescription Details
-              </h2>
-              <p className="text-gray-600 dark:text-gray-400">
-                Prescription detail view for pharmacists
-              </p>
-            </div>
-          );
+          return <DispensedPrescriptionDetail dispensedRecord={selectedPrescription} onBack={() => setSelectedPrescription(null)} />;
+          // return (
+          //   <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
+          //     <button
+          //       onClick={() => setSelectedPrescription(null)}
+          //       className="mb-4 text-blue-600 dark:text-blue-400 hover:underline"
+          //     >
+          //       ← Back to Dispensed Medicines
+          //     </button>
+          //     <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
+          //       Prescription Details
+          //     </h2>
+          //     <p className="text-gray-600 dark:text-gray-400">
+          //       Prescription detail view for pharmacists
+          //     </p>
+          //   </div>
+          // );
         }
         return (
           <DispensedMedicines
